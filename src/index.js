@@ -25,23 +25,18 @@ class Board extends React.Component {
   }
 
   render() {
+
+    const rows = [0,3,6];
+    const cols = [0,1,2];
+
     return (
       <div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
+        {rows.map(i => {
+          const inner = cols.map(j => this.renderSquare(i+j));
+          return (<div className="board-row">
+            {inner}
+          </div>);
+        })}
       </div>
     );
   }
@@ -52,7 +47,8 @@ class Game extends React.Component {
     super(props);
     this.state = {
       history: [{
-        squares: Array(9).fill(null)
+        squares: Array(9).fill(null),
+        movePosition: null,
       }],
       xIsNext: true,
       stepNumber: 0,
@@ -76,7 +72,8 @@ class Game extends React.Component {
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
       history: history.concat([{
-        squares: squares
+        squares: squares,
+        movePosition: stringify(convertPos(i)),
       }]),
       stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
@@ -89,10 +86,16 @@ class Game extends React.Component {
     const winner = calculateWinner(current.squares);
 
     const moves = history.map( (step, move) => {
-      const desc = move ? 'Go to move #' + move : 'Go to game start';
+      const desc = move ? 'Go to move #' + move + ". Position: " + step.movePosition : 'Go to game start';
+      let formattedDesc
+      if(move === this.state.stepNumber) {
+        formattedDesc = <strong>{desc}</strong>;
+      } else {
+        formattedDesc = desc;
+      }
       return (
         <li key={move}>
-          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+          <button onClick={() => this.jumpTo(move)}>{formattedDesc}</button>
         </li>
       );    
     });
@@ -146,4 +149,14 @@ function calculateWinner(squares) {
     }
   }
   return null;
+}
+
+function convertPos(i) {
+  const firstCoord = Math.floor(i/3) + 1;
+  const secondCoord = i % 3 + 1;
+  return {firstCoord, secondCoord};
+}
+
+function stringify(coords) {
+  return "(" + coords.firstCoord + ", " + coords.secondCoord + ")";
 }
